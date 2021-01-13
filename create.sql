@@ -49,10 +49,11 @@ create table if not exists EmployeeServeRooms
 
 create table if not exists RoomCost
 (
-    room_class_id int       not null primary key,
+    room_class_id int       not null,
     cost_from     timestamp not null,
     cost_to       timestamp not null,
     room_cost     int       not null,
+    primary key (room_class_id, cost_from, cost_to),
     foreign key (room_class_id) references RoomClass (room_class_id)
 );
 
