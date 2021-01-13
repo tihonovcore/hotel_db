@@ -6,7 +6,7 @@ drop table if exists Clients;
 drop table if exists EmployeeServeRooms;
 drop table if exists Employees;
 drop table if exists Rooms;
-drop table if exists RoomInventoryByClass;
+drop table if exists InventoryQuantity;
 drop table if exists RoomInventory;
 drop table if exists RoomCost;
 drop table if exists RoomClass;
@@ -61,14 +61,14 @@ create table if not exists RoomInventory
 (
     item_id    int         not null primary key,
     item_name  varchar(30) not null,
-    item_count int         not null,
     item_cost  int         not null
 );
 
-create table if not exists RoomInventoryByClass
+create table if not exists InventoryQuantity
 (
     room_class_id int not null,
     item_id       int not null,
+    item_quantity int not null,
     primary key (room_class_id, item_id),
     foreign key (room_class_id) references RoomClass (room_class_id),
     foreign key (item_id) references RoomInventory (item_id)
