@@ -1,42 +1,58 @@
--- Все комнаты обслуживаемые сотрудником
+-- Сотрудник обслуживает комнату
 select employee_name, room_number
 from employees
-         natural join employeeserverooms;
+         natural join
+     employeeserverooms;
 
 -- Этажи, где работает сотрудник
 select distinct employee_name, floor_number
 from employees
-         natural join employeeserverooms
-         natural join rooms;
+         natural join
+     employeeserverooms
+         natural join
+     rooms;
 
 -- Кто обслуживает номера deluxe
+with deluxe (room_class_id) as (select room_class_id from roomclass where comfort_level = 'deluxe')
 select distinct employee_name
 from employees
          natural join
      employeeserverooms
          natural join
-     (select room_number
-      from rooms
-               natural join roomclass
-      where comfort_level = 'deluxe') as deluxe_rooms;
-
--- Полная информация о комнате
-select floor_number, room_number, adult_count, child_count, comfort_level
-from rooms
-         natural join roomclass;
+     rooms
+         natural join
+     Deluxe;
 
 -- Текущая стоимость каждого номера
-select *
+select room_number, room_cost
 from rooms
          natural join roomclass
          natural join roomcost
 where now() between cost_from and cost_to;
 
 -- Занятые номера
-select room_number
-from roomusing
-where (now() between used_from and used_to)
-  and room_status = 'rented';
+create or replace function rented_rooms()
+    returns table
+            (
+                room_number int,
+                client_id   int
+            )
+    language plpgsql
+as
+$$
+begin
+    return query select roomusing.room_number, roomusing.client_id
+                 from roomusing
+                 where now() between used_from and used_to
+                   and room_status = 'rented';
+end;
+$$;
+
+-- Полная информация о комнате
+select floor_number, room_number, adult_count, child_count, comfort_level
+from rooms
+         natural join
+     roomclass;
 
 -- Сотрудники обслуживающие занятные номера
 select employee_name, room_number
@@ -44,72 +60,135 @@ from employees
          natural join
      employeeserverooms
          natural join
-     (select room_number
-      from roomusing
-      where (now() between used_from and used_to)
-        and room_status = 'rented') as rented_room;
+     (select * from rented_rooms()) as rented;
 
 -- Клиенты занимающие номера
-select *
+select client_name, room_number
 from clients
          natural join
-     (select client_id
-      from roomusing
-      where (now() between used_from and used_to)
-        and room_status = 'rented') as rented_owner;
+     (select * from rented_rooms()) as rented;
 
 -- Текущая стоимость свободных номеров
-select *
-from rooms
-         natural join roomclass
-         natural join roomcost
-where now() between cost_from and cost_to;
+with free_rooms (room_number, room_class_id) as (
+    select room_number, room_class_id
+    from rooms
+    where not exists(
+            select *
+            from roomusing
+            where rooms.room_number = roomusing.room_number
+              and now() between used_from and used_to
+        )
+)
+select room_number, room_cost, comfort_level
+from free_rooms
+         natural join
+     roomclass
+         natural join
+     roomcost
+where now() between cost_from and cost_to
+order by room_number;
 
 
--- Свободные номера в определенные даты todo
+-- Свободные номера в определенные даты
+create or replace function free_rooms_between(free_from date, free_to date)
+    returns table
+            (
+                room_number int
+            )
+    language plpgsql
+as
+$$
+begin
+    return query select rooms.room_number
+                 from rooms
+                 where not exists(
+                         select *
+                         from roomusing
+                         where rooms.room_number = roomusing.room_number
+                           and free_from not between used_from and used_to
+                           and free_to not between used_from and used_to
+                     );
+end;
+$$;
 
 -- Полный интвентарь гостиницы
 select item_name, item_quantity, item_cost
 from inventoryquantity
-         natural join roominventory;
+         natural join
+     roominventory;
 
 -- Описание инвентаря комнаты
-select item_name, item_quantity, item_cost
-from inventoryquantity
-         natural join roominventory
-         natural join rooms
-where room_number = 41;
+create or replace function room_inventory(room int)
+    returns table
+            (
+                item_name     varchar(30),
+                item_quantity int,
+                item_cost     int
+            )
+    language plpgsql
+as
+$$
+begin
+    return query select roominventory.item_name, inventoryquantity.item_quantity, roominventory.item_cost
+                 from inventoryquantity
+                          natural join
+                      roominventory
+                          natural join
+                      rooms
+                 where room_number = room;
+end;
+$$;
 
--- Стоимость интвентаря комнаты
+-- Стоимость интвентаря каждой комнаты
 select room_number, sum(item_cost) as inventory_cost
 from inventoryquantity
-         natural join roominventory
-         natural join rooms
+         natural join
+     roominventory
+         natural join
+     rooms
 group by room_number
 order by room_number;
 
 -- Все услуги оказанные по контракту
-select service_name, quantity.quantity
-from quantity
-         natural join services
-where contract_id = 2;
-
--- Все услуги оказанные по контракту с указанием стоимости
-select service_name, quantity.quantity, service_cost
-from quantity
-         natural join services
-where contract_id = 2;
+create or replace function services_by_contract(contract int)
+    returns table
+            (
+                service_name varchar(30),
+                quantity     int,
+                service_cost int
+            )
+    language plpgsql
+as
+$$
+begin
+    return query select services.service_name, quantity.quantity, services.service_cost
+                 from quantity
+                          natural join
+                      services
+                 where contract_id = contract;
+end;
+$$;
 
 -- Стоимость услуг по контракту
-select contract_id, sum(service_cost * quantity.quantity)
-from quantity
-         natural join services
-group by contract_id;
+create or replace function services_cost_by_contract(contract int) returns int
+    language plpgsql
+as
+$$
+begin
+    return (
+        select sum(service_cost * quantity.quantity)
+        from quantity natural join services
+        where contract_id = contract
+        group by contract_id
+    );
+end;
+$$;
 
 -- Число контрактов клиента
 select client_id, count(client_id)
 from contracts
-         natural join roomusing
+         natural join
+    roomusing
 group by client_id;
 
 -- Число незаконченных контрактов по клиенту
@@ -119,24 +198,53 @@ from contracts
 where now() <= used_to
 group by client_id;
 
-
--- Суммарный доход от клиента за все время todo
-
 -- Стоимость комнаты по контракту
-create or replace function count_room_cost(room_number int, used_from timestamp, used_to timestamp) returns int
+create or replace function count_room_cost(room int, rent_from date, rent_to date) returns int
+    language plpgsql
 as
 $$
+declare
+    current_day date = rent_from;
+    room_class  int  = (select room_class_id
+                        from rooms
+                        where room_number = room);
+    cost_accum  int  = 0;
 begin
-    return 4;
+    while current_day <= rent_to
+        loop
+            select cost_accum + (select room_cost
+                                 from roomcost
+                                 where room_class_id = room_class
+                                   and current_day between cost_from and cost_to)
+            into cost_accum;
+            select current_day + interval '1 day' into current_day;
+        end loop;
+
+    return cost_accum;
 end;
-$$ language plpgsql;
+$$;
 
+-- Стоимость контракта
+create or replace function contract_cost(contract int) returns int
+    language plpgsql
+as
+$$
+declare
+    ru_id     int;
+    room      int;
+    rent_from date;
+    rent_to   date;
+begin
+    select room_using_id
+    from contracts
+    where contract_id = contract
+    into ru_id;
 
--- select count_room_cost(
---                cast(3 as int),
---                cast(to_timestamp('17-12-20', 'DD-MM-YY') as timestamp),
---                cast(to_timestamp('31-12-20', 'DD-MM-YY') as timestamp)
---            )
+    select room_number, used_from, used_to
+    from roomusing
+    where room_using_id = ru_id
+    into room, rent_from, rent_to;
 
-
--- todo: timestamp is ok?
+    return coalesce(services_cost_by_contract(contract), 0) + count_room_cost(room, rent_from, rent_to);
+end;
+$$;

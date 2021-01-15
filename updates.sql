@@ -1,4 +1,4 @@
--- добавить сотрудника
+-- Добавить сотрудника
 create or replace function add_employee(name varchar(50)) returns void
     language plpgsql
 as
@@ -11,10 +11,6 @@ begin
 end;
 $$;
 
--- select * from employees;
--- select add_employee('pov');
--- select * from employees;
-
 -- удалить сотрудника
 create or replace function delete_employee(id int) returns void
     language plpgsql
@@ -24,10 +20,6 @@ begin
     delete from employees where employee_id = id;
 end;
 $$;
-
--- select * from employees;
--- select delete_employee(4);
--- select * from employees;
 
 -- прикрепить сотруника к комнате
 create or replace function change_room_person_in_charge(room int, employee int) returns bool
@@ -51,9 +43,6 @@ begin
 end;
 $$;
 
--- select * from employeeserverooms;
--- select change_room_person_in_charge(11, 3);
-
 -- добавить клиента
 create or replace function add_client(name varchar(50), pass_se varchar(4), pass_no varchar(6)) returns bool
     language plpgsql
@@ -69,6 +58,7 @@ begin
 
     select max(client_id) + 1 from clients into new_id;
     insert into clients values (new_id, pass_se, pass_no, name);
+
     return true;
 end;
 $$;
@@ -95,8 +85,8 @@ begin
 end;
 $$;
 
--- добавить запись в RoomUsing
-create or replace function book_room(room int, client int, book_from timestamp, book_to timestamp) returns bool
+-- забронировать номер
+create or replace function book_room(room int, client int, book_from date, book_to date) returns bool
     language plpgsql
 as
 $$
@@ -109,24 +99,24 @@ begin
         or
        not exists(select * from rooms where room_number = room)
         or
-       not exists(select *
-                  from roomusing
-                  where book_from between used_from and used_to
-                     or book_to between used_from and used_to)
+       exists(select *
+              from roomusing
+              where book_from between used_from and used_to
+                 or book_to between used_from and used_to)
     then
         return false;
     end if;
 
     select max(room_using_id) + 1 from roomusing into new_ru_id;
     insert into roomusing (room_using_id, room_number, client_id, used_from, used_to, room_status)
-    values (new_ru_id, room, client, book_from, book_to, 'rented');
+    values (new_ru_id, room, client, book_from, book_to, 'booked');
 
     return true;
 end;
 $$;
 
--- изменить даты в RoomUsing
-create or replace function change_booking_dates(ru_id int, new_book_from timestamp, new_book_to timestamp) returns bool
+-- изменить даты брони
+create or replace function change_booking_dates(ru_id int, new_book_from date, new_book_to date) returns bool
     language plpgsql
 as
 $$
@@ -135,12 +125,12 @@ begin
         or
        not exists(select * from roomusing where room_using_id = ru_id)
         or
-       not exists(
+       exists(
                select *
                from roomusing
                where room_using_id != ru_id
                  and (new_book_from between used_from and used_to or new_book_to between used_from and used_to)
-           )
+       )
     then
         return false;
     end if;
@@ -151,7 +141,7 @@ begin
 end;
 $$;
 
--- отказ от RoomUsing для брони
+-- отказ от брони
 create or replace function drop_book(ru_id int) returns bool
     language plpgsql
 as
@@ -184,23 +174,17 @@ begin
         return false;
     end if;
 
-    select quantity.quantity
-    from quantity
-    where service_id = sid
-      and contract_id = cid
+    select quantity.quantity from quantity
+    where service_id = sid and contract_id = cid
     into old_quantity;
 
     update quantity
     set quantity = old_quantity + service_quantity
-    where service_id = sid
-      and contract_id = cid;
+    where service_id = sid and contract_id = cid;
 
     return true;
 end;
 $$;
-
--- select * from quantity;
--- select provide_service_for_contract(1, 1, 5);
 
 -- добавить сервис
 create or replace function add_service(name varchar(30), cost int) returns void
@@ -215,7 +199,6 @@ begin
 end;
 $$;
 
-
 -- изменить стоимость сервиса
 create or replace function change_service_cost(id int, new_cost int) returns bool
     language plpgsql
@@ -229,5 +212,4 @@ begin
 
     update services set service_cost = new_cost where service_id = id;
 end;
-$$
-;
+$$;

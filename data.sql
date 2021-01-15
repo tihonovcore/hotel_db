@@ -38,18 +38,18 @@ values (11, 3),
        (42, 2);
 
 insert into roomcost (room_class_id, cost_from, cost_to, room_cost)
-values (1, to_timestamp('15-12-2020', 'DD-MM-YY'), to_timestamp('15-01-2021 23:59:59', 'DD-MM-YY HH24:MI:SS'), 1500),
-       (2, to_timestamp('15-12-2020', 'DD-MM-YY'), to_timestamp('15-01-2021 23:59:59', 'DD-MM-YY HH24:MI:SS'), 2000),
-       (3, to_timestamp('15-12-2020', 'DD-MM-YY'), to_timestamp('15-01-2021 23:59:59', 'DD-MM-YY HH24:MI:SS'), 2500),
-       (4, to_timestamp('15-12-2020', 'DD-MM-YY'), to_timestamp('15-01-2021 23:59:59', 'DD-MM-YY HH24:MI:SS'), 3500),
-       (5, to_timestamp('15-12-2020', 'DD-MM-YY'), to_timestamp('15-01-2021 23:59:59', 'DD-MM-YY HH24:MI:SS'), 5000),
-       (6, to_timestamp('15-12-2020', 'DD-MM-YY'), to_timestamp('15-01-2021 23:59:59', 'DD-MM-YY HH24:MI:SS'), 4000),
-       (1, to_timestamp('16-01-2021', 'DD-MM-YY'), to_timestamp('15-04-2021 23:59:59', 'DD-MM-YY HH24:MI:SS'), 1400),
-       (2, to_timestamp('16-01-2021', 'DD-MM-YY'), to_timestamp('15-04-2021 23:59:59', 'DD-MM-YY HH24:MI:SS'), 1900),
-       (3, to_timestamp('16-01-2021', 'DD-MM-YY'), to_timestamp('15-04-2021 23:59:59', 'DD-MM-YY HH24:MI:SS'), 2400),
-       (4, to_timestamp('16-01-2021', 'DD-MM-YY'), to_timestamp('15-04-2021 23:59:59', 'DD-MM-YY HH24:MI:SS'), 3400),
-       (5, to_timestamp('16-01-2021', 'DD-MM-YY'), to_timestamp('15-04-2021 23:59:59', 'DD-MM-YY HH24:MI:SS'), 4900),
-       (6, to_timestamp('16-01-2021', 'DD-MM-YY'), to_timestamp('15-04-2021 23:59:59', 'DD-MM-YY HH24:MI:SS'), 3900);
+values (1, date '15-12-2020', date '22-01-2021', 1500),
+       (2, date '15-12-2020', date '22-01-2021', 2000),
+       (3, date '15-12-2020', date '22-01-2021', 2500),
+       (4, date '15-12-2020', date '22-01-2021', 3500),
+       (5, date '15-12-2020', date '22-01-2021', 5000),
+       (6, date '15-12-2020', date '22-01-2021', 4000),
+       (1, date '23-01-2021', date '15-04-2021', 1400),
+       (2, date '23-01-2021', date '15-04-2021', 1900),
+       (3, date '23-01-2021', date '15-04-2021', 2400),
+       (4, date '23-01-2021', date '15-04-2021', 3400),
+       (5, date '23-01-2021', date '15-04-2021', 4900),
+       (6, date '23-01-2021', date '15-04-2021', 3900);
 
 insert into roominventory (item_id, item_name, item_cost)
 values (1, 'Шкаф в Нарнию', 6000),
@@ -61,19 +61,19 @@ values (1, 'Шкаф в Нарнию', 6000),
        (7, 'Статуя Ежика из смешариков', 7000);
 
 insert into inventoryquantity (room_class_id, item_id, item_quantity)
-values (1, 2, 1), -- beds
+values (1, 2, 1),
        (2, 2, 2),
        (3, 2, 2),
        (4, 3, 1),
        (5, 3, 1),
        (5, 2, 3),
        (6, 3, 1),
-       (6, 7, 1), -- ежик
-       (5, 6, 1), -- tv
+       (6, 7, 1),
+       (5, 6, 1),
        (6, 6, 1),
-       (5, 5, 1), -- холодильник
+       (5, 5, 1),
        (6, 5, 1),
-       (6, 1, 1); -- нариня
+       (6, 1, 1);
 
 insert into clients (client_id, passport_series, passport_number, client_name)
 values (1, '1960', '123335', 'Поттер'),
@@ -82,15 +82,18 @@ values (1, '1960', '123335', 'Поттер'),
        (4, '1979', '123532', 'Гермиона Грейнджер'),
        (5, '1926', '123334', 'Тот-Кого-Нельзя-Называть');
 
--- TODO: DD-MM-YY ---> DD-MM-YYYY
 insert into roomusing (room_using_id, room_number, client_id, used_from, used_to, room_status)
-values (1, 12, 1, to_timestamp('20-12-2020', 'DD-MM-YY'), to_timestamp('04-01-2021 23:59:59', 'DD-MM-YY HH24:MI:SS'), 'rented'),
-       (2, 12, 3, to_timestamp('05-01-2021', 'DD-MM-YY'), to_timestamp('14-01-2021 23:59:59', 'DD-MM-YY HH24:MI:SS'), 'booked'),
-       (3, 42, 5, to_timestamp('29-12-2020', 'DD-MM-YY'), to_timestamp('26-01-2021 23:59:59', 'DD-MM-YY HH24:MI:SS'), 'rented');
+values (1, 12, 1, date '20-12-2020', date '04-01-2021', 'rented'),
+       (2, 12, 3, date '25-01-2021', date '30-01-2021', 'booked'),
+       (3, 42, 5, date '29-12-2020', date '26-01-2021', 'rented'),
+       (4, 23, 4, date '03-01-2021', date '25-01-2021', 'rented'),
+       (5, 22, 2, date '14-01-2021', date '30-01-2021', 'rented');
 
 insert into contracts (contract_id, date_of_signing, room_using_id)
-values (1, to_timestamp('19-12-2020', 'DD-MM-YY'), 1),
-       (2, to_timestamp('29-12-2020', 'DD-MM-YY'), 3);
+values (1, date '19-12-2020', 1),
+       (2, date '29-12-2020', 3),
+       (3, date '20-11-2020', 4),
+       (4, date '20-11-2020', 5);
 
 insert into services (service_id, service_name, service_cost)
 values (1, 'Дементор', 300),

@@ -1,3 +1,4 @@
+-- begin development time part
 drop table if exists Quantity;
 drop table if exists Services;
 drop table if exists Contracts;
@@ -13,6 +14,7 @@ drop table if exists RoomClass;
 
 drop type if exists comfort_level_type;
 drop type if exists room_status_type;
+-- end development time part
 
 create type comfort_level_type as enum ('standard', 'studio', 'family', 'deluxe');
 create type room_status_type as enum ('booked', 'rented');
@@ -53,12 +55,12 @@ create table if not exists EmployeeServeRooms
 
 create table if not exists RoomCost
 (
-    room_class_id int       not null,
-    cost_from     timestamp not null,
-    cost_to       timestamp not null,
-    room_cost     int       not null,
+    room_class_id int  not null,
+    cost_from     date not null,
+    cost_to       date not null,
+    room_cost     int  not null,
 
-    primary key (room_class_id, cost_from, cost_to),
+    primary key (room_class_id, cost_from),
     foreign key (room_class_id) references RoomClass (room_class_id) on update cascade on delete restrict,
 
     check ( cost_from < cost_to ),
@@ -102,8 +104,8 @@ create table if not exists RoomUsing
     room_using_id int              not null primary key,
     room_number   int              not null,
     client_id     int              not null,
-    used_from     timestamp        not null,
-    used_to       timestamp        not null,
+    used_from     date             not null,
+    used_to       date             not null,
     room_status   room_status_type not null,
 
     foreign key (room_number) references Rooms (room_number) on update cascade on delete restrict,
@@ -114,9 +116,9 @@ create table if not exists RoomUsing
 
 create table if not exists Contracts
 (
-    contract_id     int       not null primary key,
-    date_of_signing timestamp not null,
-    room_using_id   int       not null,
+    contract_id     int  not null primary key,
+    date_of_signing date not null,
+    room_using_id   int  not null,
 
     foreign key (room_using_id) references RoomUsing (room_using_id) on update cascade on delete restrict
 );
