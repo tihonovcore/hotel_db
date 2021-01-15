@@ -32,10 +32,10 @@ values (11, 3),
        (23, 1),
        (24, 1),
        (25, 1),
-       (31, 3),
-       (32, 3),
-       (41, 3),
-       (42, 3);
+       (31, 2),
+       (32, 2),
+       (41, 2),
+       (42, 2);
 
 insert into roomcost (room_class_id, cost_from, cost_to, room_cost)
 values (1, to_timestamp('15-12-2020', 'DD-MM-YY'), to_timestamp('15-01-2021 23:59:59', 'DD-MM-YY HH24:MI:SS'), 1500),
@@ -82,6 +82,7 @@ values (1, '1960', '123335', 'Поттер'),
        (4, '1979', '123532', 'Гермиона Грейнджер'),
        (5, '1926', '123334', 'Тот-Кого-Нельзя-Называть');
 
+-- TODO: DD-MM-YY ---> DD-MM-YYYY
 insert into roomusing (room_using_id, room_number, client_id, used_from, used_to, room_status)
 values (1, 12, 1, to_timestamp('20-12-2020', 'DD-MM-YY'), to_timestamp('04-01-2021 23:59:59', 'DD-MM-YY HH24:MI:SS'), 'rented'),
        (2, 12, 3, to_timestamp('05-01-2021', 'DD-MM-YY'), to_timestamp('14-01-2021 23:59:59', 'DD-MM-YY HH24:MI:SS'), 'booked'),
@@ -105,4 +106,3 @@ values (1, 1, 14),
        (1, 4, 1),
        (1, 5, 1),
        (2, 5, 2);
-
