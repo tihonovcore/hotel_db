@@ -144,3 +144,36 @@ create table if not exists Quantity
 
     check ( quantity > 0 )
 );
+
+-- Согласно документации индексы на основные ключи добавляются автоматически
+
+-- Индексы на внешние ключи
+
+-- Сотрудник обслуживает комнату; Этажи, где работает сотрудник;
+-- Кто обслуживает номера deluxe; Сотрудники обслуживающие занятные номера;
+create index on employeeserverooms using btree (employee_id, room_number);
+
+-- Прикрепить сотрудника к комнате;
+create index on employeeserverooms using btree (room_number, employee_id);
+
+-- Текущая стоимость каждого номера; Текущая стоимость свободных номеров;
+create index on roomcost using hash (room_class_id);
+
+-- Число контрактов клиента; Число незаконченных контрактов по клиенту
+create index on contracts using hash (room_using_id);
+
+-- Все услуги оказанные по контракту; Стоимость услуг по контракту;
+-- Оказать услугу по контракту;
+create index on quantity using btree (service_id, contract_id);
+create index on quantity using btree (contract_id, service_id);
+
+-- Забронировать номер
+create index on roomusing using btree (room_number, client_id);
+create index on roomusing using btree (client_id, room_number);
+
+-- Стоимость инвентаря каждой комнаты
+create index on inventoryquantity using btree (room_class_id, item_id);
+create index on inventoryquantity using btree (item_id, room_class_id);
+
+-- Эти индексы на внешние ключи почти не используются
+create index on rooms using hash (room_class_id);

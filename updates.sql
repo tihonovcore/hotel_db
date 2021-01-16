@@ -11,7 +11,7 @@ begin
 end;
 $$;
 
--- удалить сотрудника
+-- Удалить сотрудника
 create or replace function delete_employee(id int) returns void
     language plpgsql
 as
@@ -21,7 +21,7 @@ begin
 end;
 $$;
 
--- прикрепить сотруника к комнате
+-- Прикрепить сотрудника к комнате
 create or replace function change_room_person_in_charge(room int, employee int) returns bool
     language plpgsql
 as
@@ -43,7 +43,9 @@ begin
 end;
 $$;
 
--- добавить клиента
+select change_room_person_in_charge(12, 3);
+
+-- Добавить клиента
 create or replace function add_client(name varchar(50), pass_se varchar(4), pass_no varchar(6)) returns bool
     language plpgsql
 as
@@ -63,7 +65,9 @@ begin
 end;
 $$;
 
--- заключить контракт
+select add_client('Драко Малфой', '1980', '548192');
+
+-- Заключить контракт
 create or replace function sign_contract(ru_id int) returns bool
     language plpgsql
 as
@@ -85,7 +89,7 @@ begin
 end;
 $$;
 
--- забронировать номер
+-- Забронировать номер
 create or replace function book_room(room int, client int, book_from date, book_to date) returns bool
     language plpgsql
 as
@@ -115,7 +119,7 @@ begin
 end;
 $$;
 
--- изменить даты брони
+-- Изменить даты брони
 create or replace function change_booking_dates(ru_id int, new_book_from date, new_book_to date) returns bool
     language plpgsql
 as
@@ -141,7 +145,7 @@ begin
 end;
 $$;
 
--- отказ от брони
+-- Отказ от брони
 create or replace function drop_book(ru_id int) returns bool
     language plpgsql
 as
@@ -157,8 +161,8 @@ begin
 end;
 $$;
 
--- оказать услугу по контракту
-create function provide_service_for_contract(sid int, cid int, service_quantity int) returns bool
+-- Оказать услугу по контракту
+create or replace function provide_service_for_contract(sid int, cid int, service_quantity int) returns bool
     language plpgsql
 as
 $$
@@ -178,15 +182,21 @@ begin
     where service_id = sid and contract_id = cid
     into old_quantity;
 
-    update quantity
-    set quantity = old_quantity + service_quantity
-    where service_id = sid and contract_id = cid;
+    if old_quantity != 0
+    then
+        update quantity
+        set quantity = old_quantity + service_quantity
+        where service_id = sid and contract_id = cid;
+    else
+        insert into quantity (contract_id, service_id, quantity)
+        values (cid, sid, service_quantity);
+    end if;
 
     return true;
 end;
 $$;
 
--- добавить сервис
+-- Добавить сервис
 create or replace function add_service(name varchar(30), cost int) returns void
     language plpgsql
 as
@@ -199,7 +209,7 @@ begin
 end;
 $$;
 
--- изменить стоимость сервиса
+-- Изменить стоимость сервиса
 create or replace function change_service_cost(id int, new_cost int) returns bool
     language plpgsql
 as

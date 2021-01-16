@@ -26,8 +26,8 @@ from employees
 -- Текущая стоимость каждого номера
 select room_number, room_cost
 from rooms
-         natural join roomclass
-         natural join roomcost
+         natural join
+     roomcost
 where now() between cost_from and cost_to;
 
 -- Занятые номера
@@ -48,6 +48,8 @@ begin
 end;
 $$;
 
+select * from rented_rooms();
+
 -- Полная информация о комнате
 select floor_number, room_number, adult_count, child_count, comfort_level
 from rooms
@@ -62,7 +64,7 @@ from employees
          natural join
      (select * from rented_rooms()) as rented;
 
--- Клиенты занимающие номера
+-- Клиенты, занимающие номера
 select client_name, room_number
 from clients
          natural join
@@ -111,11 +113,17 @@ begin
 end;
 $$;
 
--- Полный интвентарь гостиницы
+select * from free_rooms_between(date '13-01-21', date '13-02-21');
+
+-- Полный инвентарь гостиницы
 select item_name, item_quantity, item_cost
-from inventoryquantity
+from roominventory
          natural join
-     roominventory;
+     (
+         select item_id, sum(item_quantity) as item_quantity
+         from inventoryquantity
+         group by item_id
+     ) as count_inventory;
 
 -- Описание инвентаря комнаты
 create or replace function room_inventory(room int)
@@ -139,7 +147,9 @@ begin
 end;
 $$;
 
--- Стоимость интвентаря каждой комнаты
+select * from room_inventory(41);
+
+-- Стоимость инвентаря каждой комнаты
 select room_number, sum(item_cost) as inventory_cost
 from inventoryquantity
          natural join
@@ -169,6 +179,8 @@ begin
 end;
 $$;
 
+select * from services_by_contract(2);
+
 -- Стоимость услуг по контракту
 create or replace function services_cost_by_contract(contract int) returns int
     language plpgsql
@@ -184,17 +196,20 @@ begin
 end;
 $$;
 
+select services_cost_by_contract(1);
+
 -- Число контрактов клиента
 select client_id, count(client_id)
 from contracts
          natural join
-    roomusing
+     roomusing
 group by client_id;
 
 -- Число незаконченных контрактов по клиенту
 select client_id, count(contract_id)
 from contracts
-         natural join roomusing
+         natural join
+     roomusing
 where now() <= used_to
 group by client_id;
 
@@ -248,3 +263,5 @@ begin
     return coalesce(services_cost_by_contract(contract), 0) + count_room_cost(room, rent_from, rent_to);
 end;
 $$;
+
+select contract_cost(2);
